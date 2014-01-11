@@ -1,0 +1,60 @@
+#!/bin/bash
+
+wait_time="60"
+branch="HEAD"
+name=$(basename $(pwd))
+
+function usage {
+	echo "git-watch allow you to check if someone is pushing some shit on YOUR modafakah repo."
+	echo 
+	echo "Usage:"
+	echo "   ./git-watch [delay] [branch] (&)"
+	echo "delay: the delay between each check (default: $wait_time)"
+	echo "branch: the branch to check (default: $branch)"
+	echo "(& for launching in background)"
+	echo
+	echo "Note: for security issues, you will have to add ssh keys in case of"
+	echo "accessing a ssh remote repository. If you don't, you'll have to enter"
+	echo "your password each time a check is performed."
+}
+
+#show help
+if [ "$1" = "-h" ]; then
+	usage
+	exit
+fi
+
+if [ "$1" != "" ]; then
+	wait_time=$1
+fi
+
+if [ "$2" != "" ]; then 
+	branch=$2
+fi
+
+
+#output launch in console
+echo "git-watch launched with $wait_time sec delay on $branch branch [$name]."
+echo "Use -h for help."
+
+#Local version
+rev_current=$(git rev-parse $branch)
+#infinite loop
+while :
+do
+#Repository version
+rev_repo=$(echo $(git ls-remote origin -h $branch) | cut -d ' ' -f1)
+if [ "$rev_repo" != "$rev_current" ]
+	then
+	#alert the user
+	notify-send "Git Watch: $name" "A new version is available for $name on $branch branch."
+	#map as seen
+	rev_current=$rev_repo
+fi
+
+#wait before next check
+sleep $wait_time
+
+done
+
+
